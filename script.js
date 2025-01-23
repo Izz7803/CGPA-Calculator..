@@ -1,49 +1,89 @@
-// Arrays to store grades and credits
-let grades = [];
-let credits = [];
+// Store courses data
+let courses = [];
 
-// Function to add a new subject row
-function addSubject() {
-    const subjectsDiv = document.getElementById('subjects');
-    const newRow = document.createElement('div');
-    newRow.classList.add('subject-row');
-    newRow.innerHTML = `
-        <input type="number" class="grade" placeholder="Grade (0-4)" min="0" max="4" step="0.01">
-        <input type="number" class="credit" placeholder="Credits" min="1" step="1">
-    `;
-    subjectsDiv.appendChild(newRow);
+// Add course data when the "Add Course" button is clicked
+document.getElementById('addCourse').addEventListener('click', () => {
+  const name = document.getElementById('courseName').value.trim();
+  const marks = parseFloat(document.getElementById('marks').value);
+  const credits = parseFloat(document.getElementById('credits').value);
+
+  // Input validation
+  if (!name || isNaN(marks) || isNaN(credits) || marks < 0 || marks > 100 || credits <= 0) {
+    alert('Please provide valid inputs.');
+    return;
+  }
+
+  // Calculate grade points based on marks
+  const gradePoints = calculateGradePoints(marks);
+  
+  // Add course to the list
+  courses.push({ name, marks, credits, gradePoints });
+
+  // Update the table and reset the form
+  displayCourses();
+  document.getElementById('courseForm').reset();
+});
+
+// Calculate GPA when the "Calculate GPA" button is clicked
+document.getElementById('calculateGPA').addEventListener('click', () => {
+  const gpa = calculateGPA();
+  if (gpa !== null) {
+    document.getElementById('gpaDisplay').textContent = `GPA: ${gpa.toFixed(2)}`;
+  }
+});
+
+// Calculate CGPA when the "Calculate CGPA" button is clicked
+document.getElementById('calculateCGPA').addEventListener('click', () => {
+  const cgpa = calculateCGPA();
+  if (cgpa !== null) {
+    document.getElementById('cgpaDisplay').textContent = `CGPA: ${cgpa.toFixed(2)}`;
+  }
+});
+
+// Function to calculate grade points based on marks
+function calculateGradePoints(marks) {
+  if (marks >= 90) return 4.0;
+  if (marks >= 80) return 3.7;
+  if (marks >= 70) return 3.0;
+  if (marks >= 60) return 2.0;
+  return 0.0;
 }
 
-// Function to calculate CGPA
+// Function to calculate GPA
+function calculateGPA() {
+  if (courses.length === 0) {
+    alert('No courses added yet.');
+    return null;
+  }
+
+  let totalPoints = 0;
+  let totalCredits = 0;
+
+  for (const course of courses) {
+    totalPoints += course.gradePoints * course.credits;
+    totalCredits += course.credits;
+  }
+
+  return totalPoints / totalCredits;
+}
+
+// Function to calculate CGPA (same as GPA for simplicity; can extend for multiple semesters)
 function calculateCGPA() {
-    const gradeInputs = document.querySelectorAll('.grade');
-    const creditInputs = document.querySelectorAll('.credit');
+  return calculateGPA();
+}
 
-    // Reset arrays and totals
-    grades = [];
-    credits = [];
-    let totalQualityPoints = 0;
-    let totalCredits = 0;
+// Function to dynamically display courses in the table
+function displayCourses() {
+  const tbody = document.querySelector('#resultsTable tbody');
+  tbody.innerHTML = ''; // Clear existing rows
 
-    // Loop through inputs and calculate total quality points and credits
-    for (let i = 0; i < gradeInputs.length; i++) {
-        const grade = parseFloat(gradeInputs[i].value);
-        const credit = parseFloat(creditInputs[i].value);
-
-        if (!isNaN(grade) && !isNaN(credit) && grade >= 0 && grade <= 4 && credit > 0) {
-            grades.push(grade);
-            credits.push(credit);
-            totalQualityPoints += grade * credit;
-            totalCredits += credit;
-        } else {
-            alert('Please enter valid grades (0-4) and credits (>0).');
-            return;
-        }
-    }
-
-    // Calculate CGPA
-    const cgpa = totalCredits > 0 ? (totalQualityPoints / totalCredits).toFixed(2) : 0;
-
-    // Display result
-    document.getElementById('result').innerText = `Your CGPA is: ${cgpa}`;
+  for (const course of courses) {
+    const row = `<tr>
+      <td>${course.name}</td>
+      <td>${course.marks}</td>
+      <td>${course.credits}</td>
+      <td>${course.gradePoints.toFixed(2)}</td>
+    </tr>`;
+    tbody.innerHTML += row;
+  }
 }
