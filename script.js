@@ -1,72 +1,75 @@
 // Store semester data
-let semesters = []; // Each semester contains a list of courses
+let semesters = []; // Array to store all semesters
+let currentSemester = []; // Courses for the current semester
 
-// Store current semester courses
-let currentSemester = [];
-
-// Add course data to the current semester
+// Add course to the current semester
 document.getElementById('addCourse').addEventListener('click', () => {
   const name = document.getElementById('courseName').value.trim();
   const marks = parseFloat(document.getElementById('marks').value);
   const credits = parseFloat(document.getElementById('credits').value);
 
-  // Input validation
+  // Validate input
   if (!name || isNaN(marks) || isNaN(credits) || marks < 0 || marks > 100 || credits <= 0) {
-    alert('Please provide valid inputs.');
+    showNotification('Please provide valid inputs!', 'error');
     return;
   }
 
-  // Calculate grade points based on marks
+  // Calculate grade points
   const gradePoints = calculateGradePoints(marks);
-  
-  // Add course to the current semester
+
+  // Add course to current semester
   currentSemester.push({ name, marks, credits, gradePoints });
 
-  // Update the table and reset the form
+  // Update the table
   displayCourses(currentSemester);
   document.getElementById('courseForm').reset();
+
+  showNotification(`Course "${name}" added successfully!`, 'success');
 });
 
-// Save current semester and reset for the next semester
+// Save current semester and prepare for a new one
 document.getElementById('saveSemester').addEventListener('click', () => {
   if (currentSemester.length === 0) {
-    alert('No courses to save for the semester.');
+    showNotification('No courses to save for the semester.', 'error');
     return;
   }
 
-  // Calculate GPA for the current semester
+  // Calculate and save GPA for the current semester
   const gpa = calculateGPA(currentSemester);
-  semesters.push({ courses: currentSemester, gpa });
-  
-  // Reset the current semester
+  semesters.push({ courses: [...currentSemester], gpa });
+
+  // Reset current semester
   currentSemester = [];
-  displayCourses(currentSemester); // Clear the table
-  alert(`Semester saved! GPA: ${gpa.toFixed(2)}`);
+  displayCourses(currentSemester);
+
+  showNotification(`Semester saved! GPA: ${gpa.toFixed(2)}`, 'success');
 });
 
 // Calculate GPA for the current semester
 document.getElementById('calculateGPA').addEventListener('click', () => {
   if (currentSemester.length === 0) {
-    alert('No courses added yet.');
+    showNotification('No courses added yet.', 'error');
     return;
   }
 
   const gpa = calculateGPA(currentSemester);
-  document.getElementById('gpaDisplay').textContent = `GPA: ${gpa.toFixed(2)}`;
+  document.getElementById('gpaDisplay').innerHTML = `<i class="fas fa-graduation-cap"></i> GPA: ${gpa.toFixed(2)}`;
+  showNotification(`Current Semester GPA: ${gpa.toFixed(2)}`, 'info');
 });
 
-// Calculate CGPA across all saved semesters
+// Calculate CGPA across all semesters
 document.getElementById('calculateCGPA').addEventListener('click', () => {
   if (semesters.length === 0) {
-    alert('No semesters saved yet.');
+    showNotification('No semesters saved yet.', 'error');
     return;
   }
 
   const cgpa = calculateCGPA();
-  document.getElementById('cgpaDisplay').textContent = `CGPA: ${cgpa.toFixed(2)}`;
+  document.getElementById('cgpaDisplay').innerHTML = `<i class="fas fa-chart-line"></i> CGPA: ${cgpa.toFixed(2)}`;
+  showNotification(`Cumulative CGPA: ${cgpa.toFixed(2)}`, 'info');
 });
 
-// Function to calculate grade points based on marks
+// Calculate grade points based on marks
 function calculateGradePoints(marks) {
   if (marks >= 90) return 4.0;
   if (marks >= 80) return 3.7;
@@ -75,7 +78,7 @@ function calculateGradePoints(marks) {
   return 0.0;
 }
 
-// Function to calculate GPA for a single semester
+// Calculate GPA for a single semester
 function calculateGPA(courses) {
   let totalPoints = 0;
   let totalCredits = 0;
@@ -88,7 +91,7 @@ function calculateGPA(courses) {
   return totalPoints / totalCredits;
 }
 
-// Function to calculate CGPA across all semesters
+// Calculate CGPA across all semesters
 function calculateCGPA() {
   let totalPoints = 0;
   let totalCredits = 0;
@@ -103,10 +106,10 @@ function calculateCGPA() {
   return totalPoints / totalCredits;
 }
 
-// Function to dynamically display courses in the table
+// Display courses in the table
 function displayCourses(courses) {
   const tbody = document.querySelector('#resultsTable tbody');
-  tbody.innerHTML = ''; // Clear existing rows
+  tbody.innerHTML = '';
 
   for (const course of courses) {
     const row = `<tr>
@@ -117,4 +120,16 @@ function displayCourses(courses) {
     </tr>`;
     tbody.innerHTML += row;
   }
+}
+
+// Display notifications
+function showNotification(message, type) {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.innerHTML = message;
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
 }
