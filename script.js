@@ -1,7 +1,10 @@
-// Store courses data
-let courses = [];
+// Store semester data
+let semesters = []; // Each semester contains a list of courses
 
-// Add course data when the "Add Course" button is clicked
+// Store current semester courses
+let currentSemester = [];
+
+// Add course data to the current semester
 document.getElementById('addCourse').addEventListener('click', () => {
   const name = document.getElementById('courseName').value.trim();
   const marks = parseFloat(document.getElementById('marks').value);
@@ -16,28 +19,51 @@ document.getElementById('addCourse').addEventListener('click', () => {
   // Calculate grade points based on marks
   const gradePoints = calculateGradePoints(marks);
   
-  // Add course to the list
-  courses.push({ name, marks, credits, gradePoints });
+  // Add course to the current semester
+  currentSemester.push({ name, marks, credits, gradePoints });
 
   // Update the table and reset the form
-  displayCourses();
+  displayCourses(currentSemester);
   document.getElementById('courseForm').reset();
 });
 
-// Calculate GPA when the "Calculate GPA" button is clicked
-document.getElementById('calculateGPA').addEventListener('click', () => {
-  const gpa = calculateGPA();
-  if (gpa !== null) {
-    document.getElementById('gpaDisplay').textContent = `GPA: ${gpa.toFixed(2)}`;
+// Save current semester and reset for the next semester
+document.getElementById('saveSemester').addEventListener('click', () => {
+  if (currentSemester.length === 0) {
+    alert('No courses to save for the semester.');
+    return;
   }
+
+  // Calculate GPA for the current semester
+  const gpa = calculateGPA(currentSemester);
+  semesters.push({ courses: currentSemester, gpa });
+  
+  // Reset the current semester
+  currentSemester = [];
+  displayCourses(currentSemester); // Clear the table
+  alert(`Semester saved! GPA: ${gpa.toFixed(2)}`);
 });
 
-// Calculate CGPA when the "Calculate CGPA" button is clicked
-document.getElementById('calculateCGPA').addEventListener('click', () => {
-  const cgpa = calculateCGPA();
-  if (cgpa !== null) {
-    document.getElementById('cgpaDisplay').textContent = `CGPA: ${cgpa.toFixed(2)}`;
+// Calculate GPA for the current semester
+document.getElementById('calculateGPA').addEventListener('click', () => {
+  if (currentSemester.length === 0) {
+    alert('No courses added yet.');
+    return;
   }
+
+  const gpa = calculateGPA(currentSemester);
+  document.getElementById('gpaDisplay').textContent = `GPA: ${gpa.toFixed(2)}`;
+});
+
+// Calculate CGPA across all saved semesters
+document.getElementById('calculateCGPA').addEventListener('click', () => {
+  if (semesters.length === 0) {
+    alert('No semesters saved yet.');
+    return;
+  }
+
+  const cgpa = calculateCGPA();
+  document.getElementById('cgpaDisplay').textContent = `CGPA: ${cgpa.toFixed(2)}`;
 });
 
 // Function to calculate grade points based on marks
@@ -49,13 +75,8 @@ function calculateGradePoints(marks) {
   return 0.0;
 }
 
-// Function to calculate GPA
-function calculateGPA() {
-  if (courses.length === 0) {
-    alert('No courses added yet.');
-    return null;
-  }
-
+// Function to calculate GPA for a single semester
+function calculateGPA(courses) {
   let totalPoints = 0;
   let totalCredits = 0;
 
@@ -67,13 +88,23 @@ function calculateGPA() {
   return totalPoints / totalCredits;
 }
 
-// Function to calculate CGPA (same as GPA for simplicity; can extend for multiple semesters)
+// Function to calculate CGPA across all semesters
 function calculateCGPA() {
-  return calculateGPA();
+  let totalPoints = 0;
+  let totalCredits = 0;
+
+  for (const semester of semesters) {
+    for (const course of semester.courses) {
+      totalPoints += course.gradePoints * course.credits;
+      totalCredits += course.credits;
+    }
+  }
+
+  return totalPoints / totalCredits;
 }
 
 // Function to dynamically display courses in the table
-function displayCourses() {
+function displayCourses(courses) {
   const tbody = document.querySelector('#resultsTable tbody');
   tbody.innerHTML = ''; // Clear existing rows
 
